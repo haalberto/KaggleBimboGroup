@@ -8,31 +8,19 @@ This repository contains the scripts I used in my final submission to the Kaggle
 
 The main file, train.csv, contains roughly 70 million records with the following columns:
 
-Semana — Week number
-
-Agencia_ID — Sales depot ID
-
-Canal_ID — Sales channel ID
-
-Ruta_SAK — Route ID (Several routes form a sales depot)
-
-Cliente_ID — Client ID (corresponds to a store that sells Bimbo products)
-
-NombreCliente — Client name
-
-Producto_ID — Product ID
-
-NombreProducto — Product Name
-
-Venta_uni_hoy — Sales unit this week (integer)
-
-Venta_hoy — Sales this week (unit: pesos)
-
-Dev_uni_proxima — Returns unit next week (integer)
-
-Dev_proxima — Returns next week (unit: pesos)
-
-Demanda_uni_equil — Adjusted Demand (integer) (This is the target I need to predict)
+1. Semana — Week number
+2. Agencia_ID — Sales depot ID
+3. Canal_ID — Sales channel ID
+4. Ruta_SAK — Route ID (Several routes form a sales depot)
+5. Cliente_ID — Client ID (corresponds to a store that sells Bimbo products)
+6. NombreCliente — Client name
+7. Producto_ID — Product ID
+8. NombreProducto — Product Name
+9. Venta_uni_hoy — Sales unit this week (integer)
+10. Venta_hoy — Sales this week (unit: pesos)
+11. Dev_uni_proxima — Returns unit next week (integer)
+12. Dev_proxima — Returns next week (unit: pesos)
+13. Demanda_uni_equil — Adjusted Demand (integer) (This is the target I need to predict)
 
 We are asked to use this information to train a model and predict the demand for a test set provided by Kaggle. The test set only contains the columns corresponding to week number and to the ID’s of the sales depot, channel, route, client, and product.
 
@@ -49,12 +37,12 @@ where p is the predicted value of demand and a is the actual value.
 Most of the features I created are based on group averages of the log demand, where the log demand is defined as LD = log (p+1). I used the log demand instead of the regular demand because it is more in line with the evaluation metric. My reasoning for using group averages was the following: The most basic model consists of predicting the same value for all products are all stores, and the best choice of this value is the average of the log demand of all the training records, since our target is the RMSLE. Thus, I decided to improve on this idea by calculating averages by group (which is a step up from simply calculating the average for all records) and using those as features for machine learning algorithms.
 
 The features I created were the following:
-Cliente_mean: Group average of the log demand of the records for a given store, regardless of what those products are. This provides a metric of the volume of sales for that store.
-C_unique: Number of different products that a store has carried. Measures the variety of products that the store handles and is complementary to the above.
-Producto_mean: Group average of the log demand of the records for a product, without distinguishing between stores. This provides a metric of how popular this product is overall.
-P_unique: Number of different stores that have carried a given product. Measures how widespread a product is and is complementary to the above.
-CP_mean: Group average for a given store-product combination. This potentially has great predictive power when both the store and product are known, but not useful when handling a new store or a new product.
-PR_mean: Group average for a given product-route combination. Very useful when the store is new since at least we know what route it belongs to.
+* Cliente_mean: Group average of the log demand of the records for a given store, regardless of what those products are. This provides a metric of the volume of sales for that store.
+* C_unique: Number of different products that a store has carried. Measures the variety of products that the store handles and is complementary to the above.
+* Producto_mean: Group average of the log demand of the records for a product, without distinguishing between stores. This provides a metric of how popular this product is overall.
+* P_unique: Number of different stores that have carried a given product. Measures how widespread a product is and is complementary to the above.
+* CP_mean: Group average for a given store-product combination. This potentially has great predictive power when both the store and product are known, but not useful when handling a new store or a new product.
+* PR_mean: Group average for a given product-route combination. Very useful when the store is new since at least we know what route it belongs to.
 
 I calculated each of the above quantities and joined them to the sales records using the corresponding ID’s. 
 
@@ -63,6 +51,7 @@ I calculated each of the above quantities and joined them to the sales records u
 The models I trained used linear regression to predict the log demand. I made this choice because then the minimization objective of the regression corresponds exactly to the RMSLE. An idea for future improvement is to try nonlinear models which use the same or at least a similar minimization objective. 
 
 I trained four different models: One using all the features and three that use only use a subset of features. The models were the following:
+
 1. Full model: Uses all features.
 2. Client-only model: Only uses the features related to the store (does not use product information)
 3. Product-only model: Only uses features related to the product (and route), but does not use store information.
@@ -77,9 +66,9 @@ The training of the linear regression models was done by holding out data from t
 
 ## Description of the scripts
 
-reg_averages_ext4_poly.py: Trains the full model and saves a pickled object containing the model (full_deg1.pkl)
-reg_seg_nocp.py: Trains the No C-P model and saves it (semi_full.pkl)
-reg_seg_nocust.py: Trains the Product-only model and saves it (no_costumer_deg1.pkl)
-reg_seg_noprod.py: Trains the Client-only model and saves it (no_product_deg1.pkl)
-reg_seg_naive.py: Calculates the average of the log demand over all records and saves it (fixed_value.pkl)
-reg_seg_submit.py: Uses all the trained models to predict the values of the test set and creates a file for submission to Kaggle.
+* reg_averages_ext4_poly.py: Trains the full model and saves a pickled object containing the model (full_deg1.pkl)
+* reg_seg_nocp.py: Trains the No C-P model and saves it (semi_full.pkl)
+* reg_seg_nocust.py: Trains the Product-only model and saves it (no_costumer_deg1.pkl)
+* reg_seg_noprod.py: Trains the Client-only model and saves it (no_product_deg1.pkl)
+* reg_seg_naive.py: Calculates the average of the log demand over all records and saves it (fixed_value.pkl)
+* reg_seg_submit.py: Uses all the trained models to predict the values of the test set and creates a file for submission to Kaggle.
